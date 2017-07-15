@@ -28,6 +28,8 @@ class QuestionViewController: UIViewController {
     
     
     @IBAction func backBtnClicked(_ sender: Any) {
+        // Stop timer
+        timer.invalidate()
         
     }
     
@@ -89,19 +91,18 @@ class QuestionViewController: UIViewController {
             
         }
         
-        setUIMode(mode: 0)
-        
-        
+        setUIMode(0)
         
     }
     
     func runTimer() {
+        
         questionStats[user.questionNum].timeTaken += 1
         let totalSeconds = questionStats[user.questionNum].timeTaken
         let mins = floor(Double(totalSeconds / 60))
         let secs = totalSeconds % 60
         
-        timerLabel.text = "\(Int(mins)):\(secs)"
+        timerLabel.text = String(format: "%02d", Int(mins)) + ":" + String(format: "%02d", Int(secs))
         
     }
     
@@ -118,13 +119,13 @@ class QuestionViewController: UIViewController {
         
         while correct == false && i < questions[user.questionNum].answer.count {
 
-            
             if (guess == questions[user.questionNum].answer[i].lowercased()) {
                 correct = true
-            } else {
-
-                i += 1
+                
             }
+            
+            i += 1
+            
         }
         
         if correct == true {
@@ -134,7 +135,7 @@ class QuestionViewController: UIViewController {
             user.questionNum += 1
             user.questionsSinceAd += 1
             
-            setUIMode(mode: 1)
+            setUIMode(1)
             submitButton.setTitle("Correct!", for: .normal)
             
             // After 0.3 seconds, update the UI for the next question
@@ -149,7 +150,7 @@ class QuestionViewController: UIViewController {
             
             questionStats[i].incorrectGuesses += 1
             
-            setUIMode(mode: 2)
+            setUIMode(2)
             submitButton.setTitle("Try again :)", for: .normal)
             
             // Then change it back after 3 seconds
@@ -160,11 +161,11 @@ class QuestionViewController: UIViewController {
     }
     
     func setUIModeDefault() {
-        setUIMode(mode: 0)
+        setUIMode(0)
         submitButton.setTitle("Submit", for: .normal)
     }
     
-    func setUIMode(mode:Int) {
+    func setUIMode(_ mode:Int) {
         // 0 = default
         // 1 = correct
         // 2 = incorrect
@@ -213,7 +214,7 @@ class QuestionViewController: UIViewController {
                 hintLabel.text?.append("\n")
                 
                 // Add latest hint into it (-1 because it's in an array from 0)
-                hintLabel.text?.append("ok \n\(questions[user.questionNum].hint[questionStats[qNum].hintsUsed - 1])")
+                hintLabel.text?.append("ok pls work \n\(questions[user.questionNum].hint[questionStats[qNum].hintsUsed - 1])")
                 
                 updateUI()
                 
@@ -222,11 +223,20 @@ class QuestionViewController: UIViewController {
                 // Display error message
                 // TODO
                 
+                createAlert(title: "Oops, this question has no more hints left!", message: "", acceptanceText: "Ok, I'll keep trying!")
+                
             }
             
         } else {
             // Handle when the user has no hints left
             // TODO
+            let watchAd = createChoiceAlert(title: "Oops, you've run out of hints!", message: "Would you like to watch an ad to unlock more now?", choiceYes: "Absolutely!", choiceNo: "Maybe later")
+            
+            if watchAd {
+                
+            } else {
+                
+            }
             
         }
     }
@@ -250,22 +260,57 @@ class QuestionViewController: UIViewController {
         questionStats.append(QuestionStats(number: 2, completed: false, incorrectGuesses: 0, hintsUsed: 0, timeTaken: 0))
         
     }
+    
+    func createAlert(title: String, message: String, acceptanceText: String){
+        
+        // Create alert
+        let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.alert)
+        
+        
+        alert.addAction(UIAlertAction(title: acceptanceText, style: UIAlertActionStyle.default, handler: { (action) in
+            alert.dismiss(animated: true, completion: nil)
+            
+        }))
+        
+        self.present(alert, animated: true, completion: nil)
+        
+    }
+    
+    func createChoiceAlert(title: String, message: String, choiceYes: String, choiceNo: String) -> Bool {
+        // Create alert
+        let alert = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.alert)
+        
+        
+        var result = false;
+        
+        // Create choices
+        
+        alert.addAction(UIAlertAction(title: choiceNo, style: UIAlertActionStyle.default, handler: { (action) in
+            alert.dismiss(animated: true, completion: nil)
+            result = false
+            
+        }))
+        
+        alert.addAction(UIAlertAction(title: choiceYes, style: UIAlertActionStyle.cancel, handler: { (action) in
+            alert.dismiss(animated: true, completion: nil)
+            result = true
+            
+        }))
+        
+        self.present(alert, animated: true, completion: nil)
+        
+        print("RESULT IS: " + String(result))
+        return result
+        
+    }
 
 }
 
-class Question {
+struct Question {
     let question:String
     let hint:[String]
     let answer:[String]
     let number:Int
-    
-    init(question: String, hint: [String], answer: [String], number: Int) {
-        self.question = question
-        self.number = number
-        self.hint = hint
-        self.answer = answer
-        
-    }
     
 }
 
